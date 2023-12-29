@@ -1,19 +1,35 @@
-import React, { useRef } from "react";
-import { View, Animated, PanResponder, StyleSheet } from "react-native";
+import React, { useRef, useState } from "react";
+import { View, Animated, PanResponder, StyleSheet, Image } from "react-native";
 import {
   moderateScale,
   moderateVerticalScale,
 } from "react-native-size-matters";
 
-
-
 const Card = ({ color, onSwipe, index, stackPosition }) => {
   const pan = useRef(new Animated.ValueXY()).current;
-  
+  const logoOpacity = useRef(new Animated.Value(0)).current;
+  const [logo, setLogo] = useState(null);
+  const [logoStyle, setLogoStyle] = useState(null);
+
   const panResponder = PanResponder.create({
     onStartShouldSetPanResponder: () => true,
     onPanResponderMove: (_, gesture) => {
       pan.setValue({ x: gesture.dx, y: gesture.dy });
+
+      if (gesture.dx > 2) {
+        setLogo(require("../asset/Right.png"));
+        setLogoStyle(styles.rightLogo);
+      } else if (gesture.dx < -2) {
+        setLogo(require("../asset/Wrong.png"));
+        setLogoStyle(styles.leftLogo);
+      }
+
+      const opacityValue = Math.min(Math.abs(gesture.dx / 200), 1);
+      Animated.timing(logoOpacity, {
+        toValue: opacityValue,
+        duration: 0,
+        useNativeDriver: false,
+      }).start();
     },
 
     onPanResponderRelease: (_, gesture) => {
@@ -26,14 +42,20 @@ const Card = ({ color, onSwipe, index, stackPosition }) => {
           toValue: { x: 0, y: 0 },
           useNativeDriver: false,
           speed: 10,
-          bounciness,
+          bounciness: 8,
         }).start();
       }
+      setLogo(null);
+      Animated.timing(logoOpacity, {
+        toValue: 0,
+        duration: 150,
+        useNativeDriver: false,
+      }).start();
     },
   });
 
   const width = moderateScale(325) - index * 10;
-  const height = moderateScale(500); // Adjust width based on index
+  const height = moderateScale(500);
 
   const animatedStyle = {
     transform: [
@@ -46,20 +68,26 @@ const Card = ({ color, onSwipe, index, stackPosition }) => {
         }),
       },
     ],
-
     zIndex: stackPosition - index,
-    top: index < 3 ? index * 10 : undefined, // Conditionally set top based on index
+    top: index < 3 ? index * 10 : undefined,
     height: index > 2 ? moderateScale(0) : moderateScale(500),
     width,
     alignSelf: "center",
-    // Update the zIndex to reposition cards in the stack
   };
 
   return (
     <Animated.View
       {...panResponder.panHandlers}
       style={[styles.card, animatedStyle, { backgroundColor: color }]}
-    ></Animated.View>
+    >
+      {logo && (
+        <Animated.Image
+          source={logo}
+          style={[styles.logo, logoStyle, { opacity: logoOpacity }]}
+          resizeMode="contain"
+        />
+      )}
+    </Animated.View>
   );
 };
 
@@ -72,6 +100,21 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 20,
+  },
+  logo: {
+    position: "absolute",
+  },
+  rightLogo: {
+    top: 20,
+    left: 20,
+    width: moderateScale(100),
+    height: moderateScale(100),
+  },
+  leftLogo: {
+    top: 20,
+    right: 20,
+    width: moderateScale(100),
+    height: moderateScale(100),
   },
 });
 
