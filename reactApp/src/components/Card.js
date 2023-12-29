@@ -105,14 +105,14 @@ const styles = StyleSheet.create({
     position: "absolute",
   },
   rightLogo: {
-    top: 20,
-    left: 20,
+    top: 5,
+    left: 5,
     width: moderateScale(100),
     height: moderateScale(100),
   },
   leftLogo: {
-    top: 20,
-    right: 20,
+    top: 5,
+    right: 5,
     width: moderateScale(100),
     height: moderateScale(100),
   },
